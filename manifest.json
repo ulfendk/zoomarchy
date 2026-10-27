@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "regin.zoomarchy",
+  "name": "Zoomarchy",
+  "version": "0.1.0",
+  "author": "Regin Ulf Nielsen",
+  "license": "MIT",
+  "description": "Presentation zoom and screen annotation for Omarchy: freeze and zoom any monitor, draw arrows, shapes and text on it, and toggle Hyprland live zoom. Configurable, conflict-checked hotkeys.",
+  "kinds": [
+    "overlay",
+    "bar-widget"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "Overlay.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Zoomarchy",
+    "description": "Zoom, draw and live zoom, with a settings screen for hotkeys and defaults.",
+    "category": "Utilities",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

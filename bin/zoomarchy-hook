@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Adds, removes or reports the block in ~/.config/hypr/bindings.lua that loads
+# Zoomarchy's generated hotkeys from ~/.config/hypr/zoomarchy.lua.
+#
+#   zoomarchy-hook install     add the block (backs up bindings.lua first)
+#   zoomarchy-hook uninstall   remove the block and the generated file
+#   zoomarchy-hook status      exit 0 when the block is present
+set -euo pipefail
+
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+BINDINGS="$CONFIG_HOME/hypr/bindings.lua"
+GENERATED="$CONFIG_HOME/hypr/zoomarchy.lua"
+BEGIN="-- zoomarchy:begin"
+END="-- zoomarchy:end"
+
+has_block() {
+  [[ -f $BINDINGS ]] && grep -qF -- "$BEGIN" "$BINDINGS"
+}
+
+backup() {
+  cp "$BINDINGS" "$BINDINGS.bak.$(date +%s)"
+}
+
+reload() {
+  command -v hyprctl >/dev/null || return 0
+  hyprctl reload >/dev/null
+  local errors
+  errors=$(hyprctl configerrors 2>/dev/null | sed '/^[[:space:]]*$/d')
+  if [[ -n $errors ]]; then
+    echo "Hyprland reports config errors:" >&2
+    echo "$errors" >&2
+    return 1
+  fi
+}
+
+case "${1:-}" in
+install)
+  if has_block; then
+    echo "Zoomarchy hotkeys are already loaded from $BINDINGS"
+    exit 0
+  fi
+  mkdir -p "$(dirname "$BINDINGS")"
+  [[ -f $BINDINGS ]] && backup
+  cat >>"$BINDINGS" <<'LUA'
+
+-- zoomarchy:begin (managed by Zoomarchy; change the keys in its bar settings)
+do
+  local path = (os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")) .. "/hypr/zoomarchy.lua"
+  local file = io.open(path, "r")
+  if file then
+    file:close()
+    dofile(path)
+  end
+end
+-- zoomarchy:end
+LUA
+  echo "Added the Zoomarchy hotkey loader to $BINDINGS"
+  reload
+  ;;
+uninstall)
+  if has_block; then
+    backup
+    sed -i "/^$BEGIN/,/^$END/d" "$BINDINGS"
+    # Drop the blank separator line install added before the block.
+    sed -i -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$BINDINGS"
+    echo "Removed the Zoomarchy hotkey loader from $BINDINGS"
+  fi
+  rm -f "$GENERATED"
+  reload
+  ;;
+status)
+  has_block
+  ;;
+*)
+  echo "Usage: zoomarchy-hook install | uninstall | status" >&2
+  exit 2
+  ;;
+esac
