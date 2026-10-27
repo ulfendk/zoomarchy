@@ -7,6 +7,8 @@ Hyprland's live zoom on and off from the bar or a hotkey.
 It is a plugin for the Omarchy shell, so it runs inside the existing bar
 process, uses the active theme's colors, and adds an icon to the bar.
 
+![Zoomarchy: zoom into a dashboard, pan, then annotate it with an ellipse, text, an arrow, a freehand underline and a highlighter](docs/zoomarchy.gif)
+
 ## Features
 
 - **Still zoom** freezes all monitors and zooms the one under the pointer.
